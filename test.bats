@@ -4,6 +4,7 @@
 
 setup_file() {
     export PATH="$BATS_TEST_DIRNAME:$PATH"
+    cd # $HOME has historically been a problem, so run tests from there
 }
 
 
