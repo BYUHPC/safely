@@ -6,7 +6,7 @@ install:
 	@mkdir -p "$(PREFIX)/bin"
 	@install -m 755 safely "$(PREFIX)/bin/safely"
 
-test:
+check:
 	@bats test.bats
 
-.PHONY: all install test
+.PHONY: all install check

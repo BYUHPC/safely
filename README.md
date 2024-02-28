@@ -39,11 +39,11 @@ make install                  # install at /usr/bin/safely
 make install PREFIX=/software # install at /software/bin/safely
 ```
 
-If you have [`bats`](https://bats-core.readthedocs.io/en/stable/index.html) installed, you can run tests with `make test`. If you want to do testing with more than your home diretory and `/tmp`, you can specify extra directories with `TESTDIRS`:
+If you have [`bats`](https://bats-core.readthedocs.io/en/stable/index.html) installed, you can run tests with `make check`. If you want to do testing with more than your home diretory and `/tmp`, you can specify extra directories with `TESTDIRS`:
 
 ```bash
-make test                    # vanilla tests
-make test TESTDIRS=/a/b,/cde # also make sure safely protects /a/b and /cde
+make check                    # vanilla tests
+make check TESTDIRS=/a/b,/cde # also make sure safely protects /a/b and /cde
 ```
 
 ## Security
