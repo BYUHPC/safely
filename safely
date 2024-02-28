@@ -90,9 +90,9 @@ container="$(mktemp -d -t safely-container-XXXXXX)"
 
 trap 'rm -rf "$container"' EXIT
 
-for f in /* "$HOME"; do
+for f in "$HOME" /*; do
     container_dir="${container}${f}"
-    if [[ "$f" = /dev || "$f" = /sys || "$f" = /proc || "$f" = /tmp ]]; then
+    if [[ "$f" = /dev || "$f" = /sys || "$f" = /proc ]]; then
         mkdir "$container_dir"
     elif [[ -L "$f" ]]; then
         ln -s "$(realpath "$f")" "$container_dir"
@@ -104,4 +104,12 @@ done
 
 
 # Run
-apptainer --silent exec --contain --no-home --env PATH="$PATH" --pwd "$PWD" --bind "$binds" "$container" "$@"
+work_dir="$PWD"
+cd # Need to be in $HOME for --no-home to work
+apptainer --silent exec --no-mount tmp \
+                        --contain \
+                        --no-home \
+                        --env PATH="$PATH" \
+                        --pwd "$work_dir" \
+                        --bind "$binds" \
+                        "$container" "$@"
