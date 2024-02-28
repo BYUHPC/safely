@@ -111,11 +111,5 @@ done < <((df -a --output=target | sed 1d; ls -d /*) | sort -r | uniq | head -n -
 
 # Run
 work_dir="$PWD"
-cd # Need to be in $HOME for --no-home to work
-apptainer --silent exec --no-mount tmp \
-                        --contain \
-                        --no-home \
-                        --env PATH="$PATH" \
-                        --pwd "$work_dir" \
-                        --bind "$binds" \
-                        "$container" "$@"
+cd / # Can't to be in $HOME or --no-home won't work
+apptainer --silent exec --no-home --env PATH="$PATH" --pwd "$work_dir" --bind "$binds" "$container" "$@"

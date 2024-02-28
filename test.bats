@@ -24,7 +24,7 @@ setup_file() {
     IFS="$OLD_IFS"
 
     mkdir -p "$HOME/.cache"
-    for dir in /tmp "$HOME/.cache" "${extra_dirs[@]}"; do
+    for dir in /tmp /dev/shm "$HOME/.cache" "${extra_dirs[@]}"; do
         test_dir="$(mktemp -d "$dir/.safety-test-XXXX")"
 
         safely -w "$test_dir" touch "$test_dir/file1" # should succeed
