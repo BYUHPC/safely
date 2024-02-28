@@ -27,7 +27,7 @@ Options:
 
 
 
-# Error helper
+# Error and warning helpers
 error_exit() {
     local retcode="$1"
     local message="$2"
@@ -37,6 +37,10 @@ error_exit() {
     echo ======
     echo "ERROR: $message" >&2
     exit "$retcode"
+}
+
+warn() {
+    echo "WARNING: $@" >&2
 }
 
 
@@ -78,28 +82,32 @@ done
 
 # If `/` was given as a writable directory, we can just run the command and exit
 if [[ "$unsafe" = true ]]; then
-    echo "WARNING: running without protection since / is writable" >&2
+    warn "running without protection since / is writable"
     "$@"
     exit
 fi
 
 
 
-# Create the pseudo-container and find the read-only directories
+# Create the pseudo-container
 container="$(mktemp -d -t safely-container-XXXXXX)"
+mkdir "$container"/{dev,sys,proc}
 
 trap 'rm -rf "$container"' EXIT
 
-for f in "$HOME" /*; do
-    container_dir="${container}${f}"
+# Create symlinks and find read-only binds from mounts and /*
+while read f; do
+    ls "$f" &>/dev/null || continue # no need to mount anything we can't see
     if [[ "$f" = /dev || "$f" = /sys || "$f" = /proc ]]; then
-        mkdir "$container_dir"
+        echo >/dev/null # don't need anything
     elif [[ -L "$f" ]]; then
-        ln -s "$(realpath "$f")" "$container_dir"
+        ln -s "$(realpath "$f")" "${container}${f}"
+    elif [[ "$f" == *,* ]]; then
+        warn "not mounting directory containing ',': $f"
     else
         [[ "$binds" == *",$f,"* || "$binds" == "$f,"* ]] || binds="$f:$f:ro,$binds"
     fi
-done
+done < <((df -a --output=target | sed 1d; ls -d /*) | sort -r | uniq | head -n -1)
 
 
 
