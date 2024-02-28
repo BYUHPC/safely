@@ -98,9 +98,7 @@ trap 'rm -rf "$container"' EXIT
 # Create symlinks and find read-only binds from mounts and /*
 while read f; do
     ls "$f" &>/dev/null || continue # no need to mount anything we can't see
-    if [[ "$f" = /dev || "$f" = /sys || "$f" = /proc ]]; then
-        echo >/dev/null # don't need anything
-    elif [[ -L "$f" ]]; then
+    if [[ -L "$f" ]]; then
         ln -s "$(realpath "$f")" "${container}${f}"
     elif [[ "$f" == *,* ]]; then
         warn "not mounting directory containing ',': $f"
