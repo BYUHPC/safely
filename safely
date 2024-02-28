@@ -2,6 +2,10 @@
 
 
 
+version=0.1.1
+
+
+
 # Usage
 usage="usage: $0 [-w writable/directory ...] [--] command [args ...]
 
@@ -34,6 +38,10 @@ while [ $# -gt 0 ]; do
     case "$1" in
         -h|--help)
             echo "$usage"
+            exit
+            ;;
+        -v|--version)
+            echo "$0 version $version"
             exit
             ;;
         -w|--writable)
