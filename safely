@@ -2,7 +2,7 @@
 
 
 
-version=0.1.1
+version=0.1.0
 
 
 
@@ -97,10 +97,7 @@ for f in /* "$HOME"; do
     elif [[ -L "$f" ]]; then
         ln -s "$(realpath "$f")" "$container_dir"
     else
-        [[ "$binds" == *",$f,"* || \
-           "$binds" == "$f,"* || \
-           "$binds" == *",$(dirname "$f"),"* || \
-           "$binds" == "$(dirname "$f"),"* ]] || binds="${binds}$f:$f:ro,"
+        [[ "$binds" == *",$f,"* || "$binds" == "$f,"* ]] || binds="$f:$f:ro,$binds"
     fi
 done
 
