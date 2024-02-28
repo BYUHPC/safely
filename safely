@@ -1,0 +1,89 @@
+#!/bin/bash
+
+
+
+# Usage
+usage="usage: $0 [-w writable/directory ...] [--] command [args ...]
+
+$0 runs an arbitrary command while restricting write access to explicitly specified directories. It can allow you to run potentially risky commands in a controlled setting.
+
+Any directory specified with \`-w\` or \`--writable\` can be written in, including subdirectories, but no directories outside of those specified can be modified by the command.
+
+As an example, '$0 --writable /tmp rm -rf $HOME/*' will fail to destroy your home directory, but '$0 --writable $HOME rm -rf $HOME/*' will succeed."
+
+
+
+# Error helper
+error_exit() {
+    local retcode="$1"
+    local message="$2"
+    echo "ERROR: $message" >&2
+    echo ======
+    echo "$usage" >&2
+    echo ======
+    echo "ERROR: $message" >&2
+    exit "$retcode"
+}
+
+
+
+# Parse
+unset binds
+unsafe=false
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -h|--help)
+            echo "$usage"
+            exit
+            ;;
+        -w|--writable)
+            [[ -n "$2" ]] || error_exit 2 "argument for $1 is missing"
+            binds="${binds}$(realpath -e "$2")," || error_exit 1 "$2 is not a valid path"
+            [[ "$2" = / ]] && unsafe=true
+            shift 2
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -*)
+            error_exit 2 "unrecognized flag $1"
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+[[ $# -gt 0 ]] || error_exit 2 "command is missing"
+
+
+
+# If `/` was given as a writable directory, we can just run the command and exit
+if [[ "$unsafe" = true ]]; then
+    echo "WARNING: running without protection since / is writable" >&2
+    "$@"
+    exit
+fi
+
+
+
+# Create the pseudo-container and find the read-only directories
+container="$(mktemp -d -t safely-container-XXXXXX)"
+
+trap 'rm -rf "$container"' EXIT
+
+for f in /* "$HOME"; do
+    container_dir="${container}${f}"
+    if [[ "$f" = /dev || "$f" = /sys || "$f" = /proc || "$f" = /tmp ]]; then
+        mkdir "$container_dir"
+    elif [[ -L "$f" ]]; then
+        ln -s "$(realpath "$f")" "$container_dir"
+    else
+        [[ "$binds" == *",$f,"* || "$binds" == "$f,"* ]] || binds="${binds}$f:$f:ro,"
+    fi
+done
+
+
+
+# Run
+apptainer --silent exec --contain --no-home --pwd "$PWD" --bind "$binds" "$container" "$@"
