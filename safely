@@ -104,4 +104,4 @@ done
 
 
 # Run
-apptainer --silent exec --contain --no-home --pwd "$PWD" --bind "$binds" "$container" "$@"
+apptainer --silent exec --contain --no-home --env PATH="$PATH" --pwd "$PWD" --bind "$binds" "$container" "$@"
