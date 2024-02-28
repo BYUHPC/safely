@@ -29,7 +29,7 @@ safely -w / command arg1 arg2
 
 ```bash
 mkdir it_works
-apptainer exec --bind it_works docker://alpine ls -d it_works && echo SUCCESS || echo FAILURE
+apptainer exec --bind "$(realpath it_works)" docker://alpine ls -d it_works && echo SUCCESS || echo FAILURE
 ```
 
 You can install `safely` with `make install`:
