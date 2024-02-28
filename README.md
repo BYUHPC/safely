@@ -32,7 +32,19 @@ mkdir it_works
 apptainer exec --bind it_works docker://alpine ls -d it_works && echo SUCCESS || echo FAILURE
 ```
 
-To install to `/usr/bin/safely`, run `make install`. You can specify an alternate location with `PREFIX`: `make install PREFIX=/software` will install `safely` at `/software/bin/safely`.
+You can install `safely` with `make install`:
+
+```bash
+make install                  # install at /usr/bin/safely
+make install PREFIX=/software # install at /software/bin/safely
+```
+
+If you have [`bats`](https://bats-core.readthedocs.io/en/stable/index.html) installed, you can run tests with `make test`. If you want to do testing with more than your home diretory and `/tmp`, you can specify them with `TESTDIRS`:
+
+```bash
+make test                    # vanilla tests
+make test TESTDIRS=/a/b,/cde # also make sure safely protects /a/b and /cde
+```
 
 ## Security
 
