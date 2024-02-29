@@ -100,9 +100,9 @@ while read f; do
     ls "$f" &>/dev/null || continue # no need to mount anything we can't see
     if [[ -L "$f" ]]; then
         ln -s "$(realpath "$f")" "${container}${f}"
-    elif [[ "$f" == *,* ]]; then
-        warn "not mounting directory containing ',': $f"
     else
+        f="${f//,/\\,}" # Escape commas in path
+        f="${f//:/\\:}" # Escape colons in path
         [[ "$binds" == *",$f,"* || "$binds" == "$f,"* ]] || binds="$f:$f:ro,$binds"
     fi
 done < <((df -a --output=target | sed 1d; ls -d /*) | sort -r | uniq | head -n -1)
