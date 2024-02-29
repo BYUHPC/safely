@@ -23,6 +23,10 @@ Write permission applies recursively to subdirectories. The following is thus eq
 safely -w / command arg1 arg2
 ```
 
+You may also be interested in [`pledge`](https://justine.lol/pledge), which is more mature and has significantly broader scope.
+
+
+
 ## Installation
 
 [`apptainer`](https://apptainer.org/docs/user/latest/quick_start.html#quick-installation) must first be installed and able to bind-mount directories in containers. You can test this with:
