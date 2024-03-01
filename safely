@@ -48,8 +48,17 @@ warn() {
 
 
 
+# Create a pseudo-/dev/null so that it can be made always writable
+safely_work_dir="$(mktemp -d -t safely-workdir-XXXXXX)"
+pseudo_devnull="$safely_work_dir/devnull"
+mkfifo "$pseudo_devnull"
+tail -f "$pseudo_devnull" >/dev/null &
+devnull_tail_pid=$! # gets killed by the exit trap
+
+
+
 # Parse
-write_binds=()
+write_binds=("$pseudo_devnull":/dev/null)
 reject_odd_paths=true
 unsafe=false
 while [ $# -gt 0 ]; do
@@ -97,11 +106,12 @@ fi
 
 
 
-# Create the pseudo-container
-container="$(mktemp -d -t safely-container-XXXXXX)"
-mkdir "$container"/{dev,sys,proc}
+# Create the pseudo-container and make a cleanup trap
+container="$safely_work_dir/container"
+mkdir "$container"
+trap 'rm -r "$safely_work_dir"; kill "$devnull_tail_pid"' EXIT
 
-trap 'rm -rf "$container"' EXIT
+
 
 # Create symlinks and find read-only binds from mounts and /*
 read_binds=()
@@ -140,6 +150,6 @@ done
 
 
 # Run
-work_dir="$PWD"
+this_dir="$PWD"
 cd / # Can't to be in $HOME or --no-home won't work
-apptainer --silent exec --no-home --env PATH="$PATH" --pwd "$work_dir" --bind "$bind_list" "$container" "$@"
+apptainer --silent exec --no-home --env PATH="$PATH" --pwd "$this_dir" --bind "$bind_list" "$container" "$@"

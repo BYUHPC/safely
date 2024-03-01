@@ -25,12 +25,8 @@ setup_file() {
 
     mkdir -p "$HOME/.cache"
     for dir in /tmp /dev/shm "$HOME/.cache" "${extra_dirs[@]}"; do
-        test_dir="$(mktemp -d "$dir/.safety-test-XXXX")"
-
-        safely -w "$test_dir" touch "$test_dir/file1" # should succeed
-        run ! safely touch "$test_dir/file2"          # should fail
-
-        rm -r "$test_dir"
+        safely -w "$dir" touch "$dir" # should succeed
+        run ! safely touch "$dir"     # should fail
     done
 }
 
@@ -41,6 +37,13 @@ setup_file() {
 }
 
 
+
 @test "multiple write directories can be specified" {
     safely -w /dev -w /tmp touch /dev/shm /tmp
+}
+
+
+
+@test "/dev/null is always writable and behaves as expected" {
+    test "$(safely bash -c 'echo right; echo wrong >/dev/null')" = "right"
 }
