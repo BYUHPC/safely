@@ -3,6 +3,7 @@
 
 
 setup_file() {
+    bats_require_minimum_version 1.5.0
     export PATH="$BATS_TEST_DIRNAME:$PATH"
     cd # $HOME has historically been a problem, so run tests from there
 }
@@ -16,8 +17,6 @@ setup_file() {
 
 
 @test "touch works when it should and doesn't when it shouldn't" {
-    bats_require_minimum_version 1.5.0
-
     extra_dirs=()
     old_IFS="$IFS"
     IFS=,
@@ -33,4 +32,12 @@ setup_file() {
 
         rm -r "$test_dir"
     done
+}
+
+
+
+@test "write rules apply recursively" {
+    f=/dev/shm/.safety-test-recursive-write-rules
+    safely -w /dev touch "$f"
+    rm "$f"
 }

@@ -50,6 +50,8 @@ make check                    # vanilla tests
 make check TESTDIRS=/a/b,/cde # also make sure safely protects /a/b and /cde
 ```
 
+
+
 ## Security
 
 `safely` was written to allow me to [grade](https://github.com/BYUHPC/grade) student assignments with some peace of mind, not to stand up to hostile commands. A command can escape the confines set up by `safely` since containers aren't hard to break out of. For the time being, don't assume that `safely` will stop a motivated attacker.

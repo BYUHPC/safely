@@ -2,12 +2,12 @@
 
 
 
-version=0.1.0
+version=0.1.1
 
 
 
 # Usage
-usage="usage: $0 [-h] [-v] [-w dir ...] [--] command [args ...]
+usage="usage: $0 [-h] [-v] [-a] [-w dir ...] [--] command [args ...]
 
 $0 runs an arbitrary command while restricting write access to explicitly specified directories. It can allow you to run potentially risky commands in a controlled setting.
 
@@ -21,6 +21,9 @@ Options:
 
     -v|--version
         Print the version number
+
+    -a|--accept-odd-paths
+        Don't reject paths containing ',' or ':' when bind-mounting; incompatible with older apptainer versions
 
     -w|--writable dir
         Make 'dir' writable by the command"
@@ -46,7 +49,8 @@ warn() {
 
 
 # Parse
-unset binds
+write_binds=()
+reject_odd_paths=true
 unsafe=false
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -58,9 +62,13 @@ while [ $# -gt 0 ]; do
             echo "$0 version $version"
             exit
             ;;
+        -a|--accept-odd-paths)
+            reject_odd_paths=false
+            shift
+            ;;
         -w|--writable)
             [[ -n "$2" ]] || error_exit 2 "argument for $1 is missing"
-            binds="${binds}$(realpath -e "$2")," || error_exit 1 "$2 is not a valid path"
+            write_binds+="$(realpath -e "$2")" || error_exit 1 "$2 is not a valid path"
             [[ "$2" = / ]] && unsafe=true
             shift 2
             ;;
@@ -96,20 +104,42 @@ mkdir "$container"/{dev,sys,proc}
 trap 'rm -rf "$container"' EXIT
 
 # Create symlinks and find read-only binds from mounts and /*
+read_binds=()
 while read f; do
     ls "$f" &>/dev/null || continue # no need to mount anything we can't see
     if [[ -L "$f" ]]; then
         ln -s "$(realpath "$f")" "${container}${f}"
     else
+        if [[ "$reject_odd_paths" == true ]]; then
+            [[ "$f" == *,* || "$f" == *:* ]] && warn "not including path with comma or colon $f" && continue
+        fi
         f="${f//,/\\,}" # Escape commas in path
         f="${f//:/\\:}" # Escape colons in path
-        [[ "$binds" == *",$f,"* || "$binds" == "$f,"* ]] || binds="$f:$f:ro,$binds"
+        added=false
+        for write_bind in "${write_binds[@]}"; do
+            if [[ "$f" == "$write_bind" ]]; then
+                added=true
+            elif [[ "$f" == "$write_bind"/* ]]; then
+                read_binds+=("$f")
+                added=true
+            fi
+        done
+        [[ "$added" = true ]] || read_binds+=("$f:$f:ro")
     fi
 done < <((df -a --output=target | sed 1d; ls -d /*) | sort -r | uniq | head -n -1)
+
+
+
+# Assemble read and write binds
+unset bind_list
+binds=("${write_binds[@]}" "${read_binds[@]}")
+for bind in "${binds[@]}"; do
+    bind_list="$bind,$bind_list"
+done
 
 
 
 # Run
 work_dir="$PWD"
 cd / # Can't to be in $HOME or --no-home won't work
-apptainer --silent exec --no-home --env PATH="$PATH" --pwd "$work_dir" --bind "$binds" "$container" "$@"
+apptainer --silent exec --no-home --env PATH="$PATH" --pwd "$work_dir" --bind "$bind_list" "$container" "$@"
