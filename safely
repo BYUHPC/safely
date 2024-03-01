@@ -7,13 +7,13 @@ version=0.1.1
 
 
 # Usage
-usage="usage: $0 [-h] [-v] [-a] [-w dir ...] [--] command [args ...]
+usage="usage: safely [-h] [-v] [-a] [-w dir ...] [--] command [args ...]
 
-$0 runs an arbitrary command while restricting write access to explicitly specified directories. It can allow you to run potentially risky commands in a controlled setting.
+safely runs an arbitrary command while restricting write access to explicitly specified directories. It can allow you to run potentially risky commands in a controlled setting.
 
 Any directory specified with \`-w\` or \`--writable\` can be written in, including subdirectories, but no directories outside of those specified can be modified by the command.
 
-As an example, '$0 --writable /tmp rm -rf $HOME/*' will fail to destroy your home directory, but '$0 --writable $HOME rm -rf $HOME/*' will succeed.
+As an example, 'safely --writable /tmp rm -rf $HOME/*' will fail to destroy your home directory, but 'safely --writable $HOME rm -rf $HOME/*' will succeed.
 
 Options:
     -h|--help
@@ -68,7 +68,7 @@ while [ $# -gt 0 ]; do
             exit
             ;;
         -v|--version)
-            echo "$0 version $version"
+            echo "safely version $version"
             exit
             ;;
         -a|--accept-odd-paths)
