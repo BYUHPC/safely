@@ -44,6 +44,12 @@ setup_file() {
 
 
 
+@test "specifying one directory doesn't imply permission elsewhere" {
+    run ! safely -w /dev -w "$HOME" touch /tmp/safely-test-no-extra-perms
+}
+
+
+
 @test "/dev/null is always writable and behaves as expected" {
     safely bash -c 'echo success >/dev/null' # make sure it doesn't deny permission
     test "$(safely bash -c 'echo right; echo wrong >/dev/null')" = "right"
