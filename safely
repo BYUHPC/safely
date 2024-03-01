@@ -48,17 +48,8 @@ warn() {
 
 
 
-# Create a pseudo-/dev/null so that it can be made always writable
-safely_work_dir="$(mktemp -d -t safely-workdir-XXXXXX)"
-pseudo_devnull="$safely_work_dir/devnull"
-mkfifo "$pseudo_devnull"
-tail -f "$pseudo_devnull" >/dev/null &
-devnull_tail_pid=$! # gets killed by the exit trap
-
-
-
 # Parse
-write_binds=("$pseudo_devnull":/dev/null)
+write_binds=()
 reject_odd_paths=true
 unsafe=false
 while [ $# -gt 0 ]; do
@@ -107,9 +98,9 @@ fi
 
 
 # Create the pseudo-container and make a cleanup trap
-container="$safely_work_dir/container"
-mkdir "$container"
-trap 'rm -r "$safely_work_dir"; kill "$devnull_tail_pid"' EXIT
+container="$(mktemp -d -t safely-container-XXXXXX)"
+mkdir -p "$container/dev" # dev is the only directory we don't mount over
+trap 'rm -r "$container"' EXIT
 
 
 
@@ -119,6 +110,8 @@ while read f; do
     ls "$f" &>/dev/null || continue # no need to mount anything we can't see
     if [[ -L "$f" ]]; then
         ln -s "$(realpath "$f")" "${container}${f}"
+    elif [[ "$f" = /dev ]]; then # /dev/null can't be mounted read-only
+        continue
     else
         if [[ "$reject_odd_paths" == true ]]; then
             [[ "$f" == *,* || "$f" == *:* ]] && warn "not including path with comma or colon $f" && continue

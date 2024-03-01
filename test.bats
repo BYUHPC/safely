@@ -45,5 +45,6 @@ setup_file() {
 
 
 @test "/dev/null is always writable and behaves as expected" {
+    safely bash -c 'echo success >/dev/null' # make sure it doesn't deny permission
     test "$(safely bash -c 'echo right; echo wrong >/dev/null')" = "right"
 }
