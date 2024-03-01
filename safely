@@ -68,7 +68,7 @@ while [ $# -gt 0 ]; do
             ;;
         -w|--writable)
             [[ -n "$2" ]] || error_exit 2 "argument for $1 is missing"
-            write_binds+="$(realpath -e "$2")" || error_exit 1 "$2 is not a valid path"
+            write_binds+=("$(realpath -e "$2")") || error_exit 1 "$2 is not a valid path"
             [[ "$2" = / ]] && unsafe=true
             shift 2
             ;;

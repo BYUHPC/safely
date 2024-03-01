@@ -37,7 +37,10 @@ setup_file() {
 
 
 @test "write rules apply recursively" {
-    f=/dev/shm/.safety-test-recursive-write-rules
-    safely -w /dev touch "$f"
-    rm "$f"
+    safely -w /dev touch /dev/shm
+}
+
+
+@test "multiple write directories can be specified" {
+    safely -w /dev -w /tmp touch /dev/shm /tmp
 }
