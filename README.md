@@ -54,6 +54,6 @@ make check TESTDIRS=/a/b,/cde # also make sure safely protects /a/b and /cde
 
 ## Security
 
-`safely` was written to allow me to [grade](https://github.com/BYUHPC/grade) student assignments with some peace of mind, not to stand up to hostile commands. A command can escape the confines set up by `safely` since containers aren't hard to break out of. For the time being, don't assume that `safely` will stop a motivated attacker.
+`safely` was written to allow me to [grade](https://github.com/BYUHPC/grade) student assignments with some peace of mind, not to stand up to hostile commands. Since `safely` is just a fancy wrapper for `apptainer`, it's at most as secure as `apptainer` is--if a command can escape `apptainer`, it can escape `safely`. For the time being, don't assume that `safely` will stop a motivated attacker.
 
 Pull requests that make `safely` more robust are welcome.
